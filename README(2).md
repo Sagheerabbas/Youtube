@@ -213,6 +213,4 @@ This app is currently built for local development. If you deploy it online, make
 - Clean old files automatically
 - Follow copyright and platform rules
 
-## License
 
-Add a license before publishing the repository. For open-source use, the MIT License is a common option.
