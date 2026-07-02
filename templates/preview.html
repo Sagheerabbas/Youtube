@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Preview</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h2>Video Preview</h2>
+    <img src="{{ thumbnail_url }}" alt="Thumbnail" width="300"><br>
+    <strong>Title:</strong> {{ title }}<br>
+    <strong>Duration:</strong> {{ duration }}<br><br>
+
+    <form id="downloadForm">
+        <input type="hidden" name="url" value="{{ url }}">
+        <input type="hidden" name="title" value="{{ title }}">
+        <label>Select Format:</label>
+        <select name="format_id" id="format_id">
+            {% for f in formats %}
+            <option value="{{ f.format_id }}">
+                {{ f.resolution }} - {{ f.ext }} ({{ f.filesize }})
+            </option>
+            {% endfor %}
+        </select><br><br>
+        <button type="button" onclick="startDownload()">Download</button>
+    </form>
+
+    <div id="status" style="margin-top:20px;font-weight:bold;"></div>
+    <p><a href="/history">📜 View Download History</a></p>
+
+    <script>
+        let taskId = "";
+
+        function startDownload() {
+            const form = document.getElementById("downloadForm");
+            const url = form.elements["url"].value;
+            const title = form.elements["title"].value;
+            const format_id = form.elements["format_id"].value;
+
+            if (!url || !title || !format_id) {
+                document.getElementById("status").innerText = "❌ Missing input.";
+                return;
+            }
+
+            fetch("/start-download", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&format_id=${encodeURIComponent(format_id)}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                taskId = data.task_id;
+                document.getElementById("status").innerText = "⏳ Download started...";
+                checkProgress();
+            })
+            .catch(err => {
+                document.getElementById("status").innerText = "❌ Error starting download.";
+                console.error(err);
+            });
+        }
+
+        function checkProgress() {
+            fetch(`/progress/${taskId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "done") {
+                        document.getElementById("status").innerText = "✅ Download ready!";
+                        const a = document.createElement("a");
+                        a.href = data.url;
+                        a.download = "";
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    } else if (data.status === "error") {
+                        document.getElementById("status").innerText = "❌ Error: " + data.message;
+                    } else {
+                        document.getElementById("status").innerText = "⏳ " + data.status;
+                        setTimeout(checkProgress, 2000);
+                    }
+                });
+        }
+    </script>
+</body>
+</html>

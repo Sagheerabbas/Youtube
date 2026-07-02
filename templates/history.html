@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Download History</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h2>📜 Download History</h2>
+    <a href="/" style="margin-bottom: 20px; display: inline-block;">⬅ Back to Home</a>
+    {% if history %}
+        <table border="1" cellpadding="10">
+            <tr>
+                <th>Title</th>
+                <th>File</th>
+                <th>Source URL</th>
+                <th>Downloaded At</th>
+            </tr>
+            {% for item in history %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td><a href="/download/{{ item.filename }}" download>{{ item.filename }}</a></td>
+                <td><a href="{{ item.url }}" target="_blank">Open</a></td>
+                <td>{{ item.timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No download history found.</p>
+    {% endif %}
+</body>
+</html>
